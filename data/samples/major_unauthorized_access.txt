@@ -1,0 +1,5 @@
+The SOC confirmed unauthorized external access to the production database through
+CVE-2024-3094. The attacker IP 198.51.100.77 was observed in database audit logs.
+The database holds regulated customer records for 1800 users. The production database was
+unavailable for 30 hours while access was removed and backups were checked. Three matching
+alerts were raised. The incident is not yet contained.

@@ -1,0 +1,39 @@
+likelihood:
+  base: 2
+  external_source: 1
+  high_cvss_cve: 1
+  repeated_events: 1
+  contained_reduction: 1
+  minimum: 1
+  maximum: 5
+
+impact:
+  base: 1
+  data_sensitivity:
+    none: 0
+    internal: 1
+    confidential: 2
+    regulated: 3
+  users_affected:
+    - {minimum: 1, points: 1, label: "1-99 users"}
+    - {minimum: 100, points: 2, label: "100-999 users"}
+    - {minimum: 1000, points: 3, label: "1,000+ users"}
+  disruption_hours:
+    - {minimum: 1, points: 1, label: "under 8 hours"}
+    - {minimum: 8, points: 2, label: "8-23 hours"}
+    - {minimum: 24, points: 3, label: "24+ hours"}
+  asset_criticality:
+    domain controller: 3
+    production database: 3
+    payment system: 3
+    database: 2
+    production server: 2
+    email server: 2
+    employee workstation: 1
+    default: 0
+  maximum: 5
+
+bands:
+  low_max: 4
+  medium_max: 9
+  high_max: 16

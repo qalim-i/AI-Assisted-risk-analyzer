@@ -1,0 +1,4 @@
+An employee reported a phishing email sent from payroll-update.example on 2026-10-10.
+The message linked to https://payroll-update.example/login. The email gateway blocked the
+sender before anyone entered credentials. No customer or regulated data was accessed, no
+users were affected, and there was no service disruption. The incident was contained.
