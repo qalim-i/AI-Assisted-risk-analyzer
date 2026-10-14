@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import csv
 import json
+import os
 from io import StringIO
 from pathlib import Path
 
@@ -38,7 +39,7 @@ def main() -> None:
     """Render the one-page analyzer."""
     st.set_page_config(page_title="Incident Risk Analyzer", layout="wide")
     st.title("AI-Assisted Cybersecurity Incident Report and Risk Analyzer")
-    st.warning("Advisory only: this rule-based risk rating supports human review; it is not a substitute for incident-response decisions.")
+    #st.warning("Advisory only: this rule-based risk rating supports human review; it is not a substitute for incident-response decisions.")
 
     left, right = st.columns([1, 1.35], gap="large")
     with left:
@@ -49,6 +50,8 @@ def main() -> None:
         description = st.text_area("Incident description", value=_read_upload(uploaded_text) or sample_text, height=320)
         alerts = st.file_uploader("Optional alerts (.csv)", type=["csv"])
         st.caption("CSV rows are counted as corroborating alerts; more than one adds the configured repeated-events likelihood factor.")
+        if not os.getenv("LLM_PROVIDER") or not os.getenv("LLM_MODEL"):
+            st.info("LLM setup is required before analysis. Set LLM_PROVIDER and LLM_MODEL in the terminal, then restart Streamlit. See README.md for OpenAI and Ollama examples.")
         run = st.button("Analyze incident", type="primary", use_container_width=True)
 
     if run:

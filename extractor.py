@@ -42,7 +42,7 @@ def extract_incident(description: str) -> IncidentExtraction:
         try:
             response = complete(prompt, system)
             return IncidentExtraction.model_validate(_json_payload(response))
-        except (json.JSONDecodeError, ValidationError, ValueError, RuntimeError) as error:
+        except (json.JSONDecodeError, ValidationError, ValueError) as error:
             last_error = error
             prompt += "\n\nYour previous response was invalid. Return only a complete JSON object matching the schema."
     raise ExtractionError(f"The LLM returned invalid incident data after two attempts: {last_error}") from last_error

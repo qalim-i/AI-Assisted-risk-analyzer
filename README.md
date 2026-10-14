@@ -23,7 +23,9 @@ A small final-year project that turns a free-text cybersecurity incident into va
    pip install -r requirements.txt
    ```
 
-3. Choose one LLM provider.
+3. Choose one LLM provider. The included `.env` file is loaded automatically,
+   so you only need to configure it once. It starts with local Ollama settings.
+   Keep `.env` private; it is excluded from Git.
 
    OpenAI or another OpenAI-compatible API:
 
@@ -39,11 +41,10 @@ A small final-year project that turns a free-text cybersecurity incident into va
 
    ```powershell
    ollama pull llama3.2
-   $env:LLM_PROVIDER = "ollama"
-   $env:LLM_MODEL = "llama3.2"
-   # Optional if Ollama is not on its default endpoint:
-   # $env:OLLAMA_BASE_URL = "http://localhost:11434"
    ```
+
+   For OpenAI, edit `.env` and replace the Ollama values with the OpenAI block
+   shown in that file. You do not need to enter environment variables in PowerShell.
 
 4. Launch the app:
 
