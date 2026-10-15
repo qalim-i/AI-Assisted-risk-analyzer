@@ -26,15 +26,22 @@ def generate_narratives(incident: IncidentExtraction, risk: RiskAssessment) -> t
         "specific, practical actions). Do not claim facts not in the supplied data.\n\n"
         f"Facts:\n{facts}\n\nRisk: {json.dumps(risk.as_dict())}"
     )
-    try:
-        result = json.loads(complete(prompt, "You write concise cybersecurity incident reports."))
-        summary = result["summary"]
-        recommendations = result["recommendations"]
-        if not isinstance(summary, str) or not isinstance(recommendations, list) or not all(isinstance(item, str) for item in recommendations):
-            raise ValueError("invalid narrative shape")
-        return summary, recommendations
-    except (KeyError, TypeError, ValueError, json.JSONDecodeError) as error:
-        raise RuntimeError(f"The LLM returned invalid report narrative JSON: {error}") from error
+    last_error: Exception | None = None
+    for _ in range(2):
+        try:
+            response = complete(prompt, "You write concise cybersecurity incident reports.").strip()
+            if response.startswith("```"):
+                response = response.split("\n", 1)[1].rsplit("```", 1)[0].strip()
+            result = json.loads(response)
+            summary = result["summary"]
+            recommendations = result["recommendations"]
+            if not isinstance(summary, str) or not isinstance(recommendations, list) or not all(isinstance(item, str) for item in recommendations):
+                raise ValueError("summary must be a string and recommendations must be a list of strings")
+            return summary, recommendations
+        except (KeyError, TypeError, ValueError, json.JSONDecodeError) as error:
+            last_error = error
+            prompt += "\n\nYour previous response was invalid. Return valid JSON only, with double quotes escaped inside text."
+    raise RuntimeError(f"The LLM returned invalid report narrative JSON after two attempts: {last_error}") from last_error
 
 
 def _value(value: Any) -> str:
@@ -55,7 +62,7 @@ def build_markdown(
     iocs = [f"- {ioc.type.value}: `{ioc.value}`" for ioc in incident.iocs] or ["- None identified"]
     assets = [f"- {asset}" for asset in incident.affected_assets] or ["- None stated"]
     cves = ", ".join(incident.cve_ids) or "None stated"
-    quality = [f"- {warning}" for warning in warnings] or ["- No traceability warnings."]
+    quality = [f"- {warning}" for warning in warnings] or ["- No traceability or completeness warnings."]
     action_lines = [f"- {action}" for action in actions]
     return "\n".join([
         "# Cybersecurity Incident Report",
@@ -74,7 +81,7 @@ def build_markdown(
         "", "## Indicators of Compromise", *iocs,
         "", "## Risk Assessment",
         f"- Likelihood: {risk.likelihood}/5", f"- Impact: {risk.impact}/5",
-        f"- Final score: {risk.score}/25 ({risk.band})",
+        f"- Final score: {risk.score}/10 ({risk.band})",
         "", "### Likelihood Factors", *[f"- {factor}" for factor in risk.likelihood_factors],
         "", "### Impact Factors", *[f"- {factor}" for factor in risk.impact_factors],
         "", "## Recommended Actions", *action_lines,

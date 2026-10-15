@@ -1,0 +1,4 @@
+The perimeter firewall recorded a short automated port scan from 192.0.2.91 against a public
+web server. All connection attempts were denied by existing rules, no authentication succeeded,
+and application logs show no errors or unusual requests. The source address was added to a
+temporary block list. No users, data, or services were affected, and the event is contained.

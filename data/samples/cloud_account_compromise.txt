@@ -1,0 +1,6 @@
+Cloud audit logs show that a privileged administrator account was used from an unfamiliar
+location to create new access keys, disable security alerts, and download records from a
+production storage bucket. The bucket contains identity and transaction data for roughly
+12,000 customers. The activity continued for 55 minutes before the account was disabled.
+Several new API tokens are still under investigation, and the security team cannot yet confirm
+the full scope of data access. The incident is not contained and requires immediate escalation.

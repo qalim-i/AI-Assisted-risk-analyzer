@@ -1,81 +1,106 @@
 # AI-Assisted Cybersecurity Incident Report and Risk Analyzer
 
-A small final-year project that turns a free-text cybersecurity incident into validated structured facts, a transparent risk rating, and a downloadable incident report. It uses Streamlit, Pydantic, an OpenAI-compatible LLM API or local Ollama, and editable YAML rules.
+A Streamlit application that turns a free-text cybersecurity incident into structured, source-checkable facts, a transparent risk assessment, and downloadable reports. It combines an OpenAI-compatible API or local Ollama with Pydantic validation and editable YAML scoring rules.
 
-> **Advisory only:** The scoring is deterministic and intended to support human review. It must not replace an incident commander, security team, or legal/compliance decision.
+> **Advisory only:** This tool supports human review. Its deterministic risk rating must not replace incident-response, legal, compliance, or executive decisions.
 
-## What it does
+## Features
 
-- Accepts a pasted or `.txt` incident description and an optional alerts `.csv`.
-- Uses an LLM to return JSON matching a Pydantic schema, with one retry for invalid output.
-- Flags CVEs and IoCs that cannot be found in the original source text after case/whitespace normalization.
-- Calculates likelihood (1-5), impact (1-5), total score, and Low/Medium/High/Critical band from [`rules.yaml`](rules.yaml).
-- Builds a Markdown report and PDF with Summary, Incident Details, Affected Assets, Indicators of Compromise, Risk Assessment, Recommended Actions, and Data Quality Notes.
+- Analyze a pasted incident description or uploaded UTF-8 `.txt` file.
+- Optionally upload an alerts `.csv`; two or more alert rows contribute the configured repeated-events likelihood factor.
+- Extract incident facts into a strict Pydantic schema, retrying once if the LLM returns invalid JSON.
+- Check listed CVEs and indicators of compromise (IoCs) against the original source text after case, Unicode, and whitespace normalization.
+- Show likelihood (1–5), impact (1–5), a combined score (2–10), the corresponding Low/Medium/High/Critical band, and every contributing factor.
+- Generate a Markdown report, PDF report, and JSON analysis for download.
+- Provide seven sample scenarios, including phishing, malware, ransomware/exfiltration, and cloud-account compromise.
 
-## Setup (under 10 minutes)
+## Requirements
 
-1. Install Python 3.11 or newer from [python.org](https://www.python.org/downloads/).
-2. In PowerShell, open this project directory and create an environment:
+- Python 3.11 or newer
+- An LLM provider:
+  - an OpenAI-compatible chat-completions API and API key, or
+  - local [Ollama](https://ollama.com/) with a pulled model
 
-   ```powershell
-   py -3.11 -m venv .venv
-   .\.venv\Scripts\Activate.ps1
-   pip install -r requirements.txt
-   ```
+## Setup
 
-3. Choose one LLM provider. The included `.env` file is loaded automatically,
-   so you only need to configure it once. It starts with local Ollama settings.
-   Keep `.env` private; it is excluded from Git.
+From PowerShell in the project directory:
 
-   OpenAI or another OpenAI-compatible API:
+```powershell
+py -3.11 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+if (!(Test-Path .env)) { Copy-Item .env.example .env }
+```
 
-   ```powershell
-   $env:LLM_PROVIDER = "openai"
-   $env:LLM_MODEL = "gpt-4o-mini"
-   $env:OPENAI_API_KEY = "your-api-key"
-   # Optional for compatible providers:
-   # $env:OPENAI_BASE_URL = "https://your-provider.example/v1"
-   ```
+Configure exactly one provider in `.env`. The application reads this file automatically when it starts; `.env` is ignored by Git, so do not commit credentials. The copy command preserves an existing `.env` file.
 
-   Local Ollama (start Ollama and pull a JSON-capable model first):
+### OpenAI-compatible API
 
-   ```powershell
-   ollama pull llama3.2
-   ```
+```dotenv
+LLM_PROVIDER=openai
+LLM_MODEL=gpt-4o-mini
+OPENAI_API_KEY=replace-with-your-key
+# Optional: use a compatible endpoint instead of the provider default.
+# OPENAI_BASE_URL=https://your-provider.example/v1
+```
 
-   For OpenAI, edit `.env` and replace the Ollama values with the OpenAI block
-   shown in that file. You do not need to enter environment variables in PowerShell.
+### Local Ollama
 
-4. Launch the app:
+Pull a model first, then use the following configuration:
 
-   ```powershell
-   streamlit run app.py
-   ```
+```powershell
+ollama pull llama3.2
+```
 
-5. Select one of the three demo incidents or paste your own, then choose **Analyze incident**.
+```dotenv
+LLM_PROVIDER=ollama
+LLM_MODEL=llama3.2
+OLLAMA_BASE_URL=http://localhost:11434
+```
 
-## Run tests
+## Run the application
+
+```powershell
+streamlit run app.py
+```
+
+Select a sample or enter an incident description, optionally attach an alerts CSV, and select **Analyze incident**. The report, risk breakdown, extracted JSON, and data-quality warnings appear in the right-hand panel.
+
+## How scoring works
+
+The risk engine is deterministic. It starts with configured base values, adds or subtracts only the factors present in the extracted facts, clamps likelihood and impact to 1–5, then adds them for a final 2–10 score.
+
+| Area | Inputs currently considered |
+| --- | --- |
+| Likelihood | External source, repeated alert events, containment status, and optional caller-supplied CVSS data for a high-severity CVE |
+| Impact | Data sensitivity, affected-user count, service-disruption duration, and affected-asset criticality |
+| Risk band | The final score and thresholds in `rules.yaml` |
+
+The app does not fetch CVSS information or external threat intelligence. If a fact is absent from the source, the report surfaces a data-quality note instead of treating it as known.
+
+## Configure rules
+
+Edit [`rules.yaml`](rules.yaml) to change likelihood adjustments, data-sensitivity points, impact bands, asset-criticality keywords, or score thresholds. Rules are read for every analysis, so changes take effect without modifying code.
+
+## Test
 
 ```powershell
 pytest -q
 ```
 
-The tests do not make network calls: the extractor test mocks the LLM completion function.
+The test suite is offline: it mocks LLM completions and verifies the extraction, validation, scoring, report, and PDF behavior.
 
-## Project layout
+## Project structure
 
 ```text
-app.py                 Streamlit user interface
-schema.py              Pydantic incident schema
+app.py                 Streamlit interface and downloads
+schema.py              Strict Pydantic incident models
 extractor.py           Schema-guided LLM extraction
-validator.py           Source traceability checks
-risk.py / rules.yaml   Deterministic scoring and editable rules
-report.py              Markdown report and PDF conversion
-llm.py                 Minimal OpenAI-compatible/Ollama wrapper
-data/samples/          Phishing, malware, and unauthorized-access demos
-tests/                 Pytest coverage for core behavior
+llm.py                 OpenAI-compatible and Ollama completion wrapper
+validator.py           Source traceability and completeness checks
+risk.py                Deterministic scoring engine
+rules.yaml             Editable scoring configuration
+report.py              Narrative generation and Markdown/PDF rendering
+data/samples/          Demonstration incident descriptions
+tests/                 Offline test coverage
 ```
-
-## Rule customisation
-
-Edit `rules.yaml` to adjust likelihood points, sensitivity and impact bands, asset criticality keywords, or risk-band thresholds. The app reads it every time it analyzes an incident, so no code changes are needed.

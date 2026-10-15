@@ -1,0 +1,7 @@
+The SOC detected coordinated ransomware activity across the production file servers. Multiple
+service accounts attempted to encrypt shared engineering and customer-support directories after
+an unapproved remote-management tool was observed on a domain controller. Network monitoring
+also recorded a large outbound transfer to 198.51.100.142 before the systems were isolated.
+Approximately 420 employees cannot access essential shared files, and regulated customer
+documents may have been exposed. Backup restoration is in progress, the incident is not
+contained, and executive incident response has been activated.

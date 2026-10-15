@@ -1,0 +1,6 @@
+Endpoint monitoring flagged an unapproved script interpreter on a single employee laptop after
+the user opened a document received from an unknown sender. The process attempted to contact
+203.0.113.64 and created temporary files in the user profile, but endpoint protection blocked
+the connection before any confirmed data transfer. The laptop was isolated within 20 minutes.
+No other hosts show the same indicators, no regulated data is known to be affected, and the
+incident is contained pending a forensic review.

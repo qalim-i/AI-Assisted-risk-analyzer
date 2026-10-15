@@ -44,7 +44,7 @@ def load_rules(path: str | Path) -> dict[str, Any]:
 
 
 def risk_band(score: int, bands: Mapping[str, int]) -> str:
-    """Map a 1--25 risk score to its configured severity band."""
+    """Map a 2--10 risk score to its configured severity band."""
     if score <= bands["low_max"]:
         return "Low"
     if score <= bands["medium_max"]:
@@ -127,5 +127,5 @@ def analyze_risk(
     impact_factors.append(f"Asset criticality ({asset}): +{points}")
     impact = min(impact, int(impact_rules["maximum"]))
 
-    score = likelihood * impact
+    score = likelihood + impact
     return RiskAssessment(likelihood, impact, score, risk_band(score, rules["bands"]), likelihood_factors, impact_factors)
